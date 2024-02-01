@@ -15,48 +15,50 @@ To "hand in" the homework, you should first download this file. The best way to 
 * Print out the numerical constant pi with ten digits after the decimal point using the internal constant `pi`.
 
 ```{r}
-#TO-DO
+options(digits = 11); pi
 ```
 
 * Sum up the first 103 terms of the series 1 + 1/2 + 1/4 + 1/8 + ...
 
 ```{r}
-#TO-DO
+sum(2^-(0 : 102))
 ```
 
 * Find the product of the first 37 terms in the sequence 1/3, 1/6, 1/9  ...
 
 ```{r}
-#TO-DO
+ prod(1 / (3 * (1 : 37)))
 ```
 
 
 * Find the product of the first 387 terms of `1 * 1/2 * 1/4 * 1/8 *` ...
 
 ```{r}
-#TO-DO
+prod(2^-(0 : 386))
 ```
 
 Is this answer *exactly* correct? 
   
-#TO-DO
+#Negative
   
 * Figure out a means to express the answer more exactly. Not compute exactly, but express more exactly.
 
 ```{r}
-#TO-DO
+# We can express it with logs
 ```
 
 * Create the sequence `x = [Inf, 20, 18, ..., -20]`.
 
 ```{r}
-#TO-DO
+  c(Inf,seq(20,-20, by = -2))
+
 ```
 
 Create the sequence `x = [log_3(Inf), log_3(100), log_3(98), ... log_3(-20)]`.
 
 ```{r}
-x = log(c(Inf, seq(100, -20, by = -2)), base = 3)
+x = c(Inf,log(base = 3, seq(100, -20, by = -2)))
+x
 ```
 
 Comment on the appropriateness of the non-numeric values NAN and -Inf.
@@ -64,110 +66,120 @@ Comment on the appropriateness of the non-numeric values NAN and -Inf.
 * Create a vector of booleans where the entry is true if `x[i]` is positive and finite.
 
 ```{r}
-#TO-DO
+posAndFinite = c(x >= 0 & is.finite(x))
+posAndFinite
+infValues = c(is.infinite(x))
+infValues
 ```
 
 * Locate the indices of the non-real numbers in this vector. Hint: use the `which` function. Don't hesitate to use the documentation via `?which`.
 
 ```{r}
-#TO-DO
+which(y, arr.ind = FALSE)
 ```
 
 * Locate the indices of the infinite quantities in this vector. 
 
 ```{r}
-#TO-DO
+which(z, arr.ind = TRUE)
 ```
 
 * Locate the indices of the min and max in this vector. Hint: use the `which.min` and `which.max` functions.
 
 ```{r}
-x_within_infs = ifelse(is.infinite(x), NA, x)
-which.min(x_within_infs)
-which.max(x_within_infs)
-rm(x_within_infs)
+x_without_infs = ifelse(is.infinite(x), NA, x)
+which.min(x_without_infs)
+which.max(x_without_infs)
+
 ```
 
 * Count the number of unique values in `x`.
 
 ```{r}
-#TO-DO
+length(unique(x))
 ```
 
 * Cast `x` to a factor. Do the number of levels make sense?
 
 ```{r}
-#TO-DO
+as.factor(x)
 ```
 
 * Cast `x` to integers. What do we learn about R's infinity representation in the integer data type?
   
 ```{r}
-#TO-DO
+as.integer(x)
+
 ```
 
 * Use `x` to create a new vector `y` containing only the real numbers in x.
 
 ```{r}
-#TO-DO
+y = x[is.finite(x)]
+y
 ```
 
 * Use the left rectangle method to numerically integrate x^2 from 0 to 1 with rectangle width size 1e-6.
 
 ```{r}
-#TO-DO
+sum((seq(0,1-1e-6, by = 1e-6))^2)*(1e-6)
 ```
 
 
 * Calculate the average of 100 realizations of standard Bernoullis in one line using the `sample` function.
 
 ```{r}
-#TO-DO
+mean(sample(c(0,1), size = 100, replace = TRUE))
 ```
 
 
 * Calculate the average of 500 realizations of Bernoullis with p = 0.9 in one line using the `sample` and `mean` functions.
 
 ```{r}
-#TO-DO
+mean(sample(c(0,1), size = 100, replace = TRUE, prob = c(.1 ,.9)))
+
 ```
 
 
 * Calculate the average of 1000 realizations of Bernoullis with p = 0.9 in one line using `rbinom`.
 
 ```{r}
-#TO-DO
+mean(rbinom(n = 1000, size = 1, prob = .9))
 ```
 
 
 * Let `n = 50`. Create a n x n matrix `R` of exactly 50% entries 0's, 25% 1's 25% 2's. These values should be in random locations.
 
 ```{r}
-#TO-DO
+vec = sample(c(rep(0, 1250), rep(1, 625), rep(2, 625)))
+R = matrix(vec, nrow = 50, ncol = 50)
+R
 ```
 
 * Randomly punch holes (i.e. `NA`) values in this matrix so that an each entry is missing with probability 30%.
 
 ```{r}
-#TO-DO
+R[runif(2500) < .3] = NA
+R
 ```
 
 * Sort the rows in matrix `R` by the largest row sum to lowest. Be careful about the NA's!
 
 ```{r}
-#TO-DO
+R[order(rowSums(R, na.rm = TRUE), decreasing = TRUE),]
 ```
 
 * We will now learn the `apply` function. This is a handy function that saves writing for loops which should be eschewed in R. Use the apply function to compute a vector whose entries are the standard deviation of each row. Use the apply function to compute a vector whose entries are the standard deviation of each column. Be careful about the NA's! This should be one line.
 
 ```{r}
-#TO-DO
+apply(R, MARGIN = 1, sd, na.rm = TRUE)
+apply(R, MARGIN = 2, sd, na.rm = TRUE)
 ```
 
 * Use the `apply` function to compute a vector whose entries are the count of entries that are 1 or 2 in each column. This should be one line.
 
 ```{r}
-#TO-DO
+apply(R, MARGIN = 2, function(x){sum(x==1|x==2, na.rm = TRUE)})
 ```
 
 * Use the `split` function to create a list whose keys are the column number and values are the vector of the columns. Look at the last example in the documentation `?split`.
@@ -185,25 +197,32 @@ rm(x_within_infs)
 * Set a seed and then create a vector `v` consisting of a sample of 1,000 iid normal realizations with mean -10 and variance 100.
 
 ```{r}
-#TO-DO
+set.seed(7902)
+v = c(rnorm(1000, mean = -10, sd = 10))
+v
 ```
 
 * Repeat this exercise by resetting the seed to ensure you obtain the same results.
 
 ```{r}
-#TO-DO
+set.seed(7902)
+v = c(rnorm(1000, mean = -10, sd = 10))
+v
 ```
 
 * Find the average of `v` and the standard error of `v`.
 
 ```{r}
-#TO-DO
+mean(v)
+10 / sqrt(1000) #standard error is the sd / sqrt(n)
 ```
 
 * Find the 5%ile of `v` and use the `qnorm` function to compute what it theoretically should be. Is the estimate about what is expected by theory?
 
 ```{r}
-#TO-DO
+quantile(v, probs = .05)
+qnorm(.05, mean = -10, sd = 10) 
+#yes, our standard error was .316... and our values are within that error
 ```
 
 * What is the percentile of `v` that corresponds to the value 0? What should it be theoretically? Is the estimate about what is expected by theory?
@@ -215,19 +234,60 @@ rm(x_within_infs)
 * Create a function `my_reverse` which takes as required input a vector `v` and returns the vector in reverse where the first entry is the last entry, etc. No function calls are allowed inside your function otherwise that would defeat the purpose of the exercise! (Yes, there is a base R function that does this called `rev`). Use `head` on `v` and `tail` on `my_reverse(v)` to verify it works.
 
 ```{r}
-#TO-DO
+my_reverse= function(v) {
+    n =length(v)
+    reversed_v =numeric(n)  # Initialize an empty numeric vector of the same length
+    for (i in 1:n) {
+        reversed_v[i]= v[n - i + 1]
+    }
+    return(reversed_v)
+}
+my_reverse(v)
+
+head(v)
+tail(my_reverse(v))
+
 ```
 
 * Create a function `flip_matrix` which takes as required input a matrix, an argument `dim_to_rev` that returns the matrix with the rows in reverse order or the columns in reverse order depending on the `dim_to_rev` argument. Let the default be the dimension of the matrix that is greater. If the number of rows 
 
 ```{r}
-#TO-DO
+flip_matrix = function(matrix, dim_to_rev) {
+    # Determine the dimension to reverse
+    if (is.null(dim_to_rev)) {
+        dim_to_rev = ifelse(nrow(matrix) >= ncol(matrix), 1, 2)
+    }
+
+    # Validate dim_to_rev
+    if (dim_to_rev != 1 && dim_to_rev != 2) {
+        stop("dim_to_rev must be either 1 (rows) or 2 (columns)")
+    }
+
+    # Reverse rows or columns based on dim_to_rev
+    if (dim_to_rev == 1) {
+        matrix = matrix[nrow(matrix):1, , drop = FALSE]
+    } else {
+        matrix = matrix[, ncol(matrix):1, drop = FALSE]
+    }
+
+    return(matrix)
+}
+
 ```
 
 * Create a list named `my_list` with keys "A", "B", ... where the entries are arrays of size 1, 2 x 2, 3 x 3 x 3, etc. Fill the array with the numbers 1, 2, 3, etc. Make 8 entries according to this sequence.
 
 ```{r}
-#TO-DO
+my_list = list("A" = array(1,1),
+               "B" = array(2,c(2,2)),
+               "C" = array(3,c(3,3,3)),
+               "D" = array(4,c(4,4,4,4)),
+               "E" = array(5,c(5,5,5,5,5)),
+               "F" = array(6,c(6,6,6,6,6,6)),
+               "G" = array(7,c(7,7,7,7,7,7,7)),
+               "H" = array(8,c(8,8,8,8,8,8,8,8)))
+
+               
 ```
 
 Run the following code:
@@ -238,7 +298,7 @@ lapply(my_list, object.size)
 
 Use `?object.size` to read about what these functions do. Then explain the output you see above. For the later arrays, does it make sense given the dimensions of the arrays?
 
-#TO-DO
+#The output above is just the storage that each of the arrays in the list take up. It makes sense that the storage is so big for the later arrays because each array is kind of growing at an exponential rate
 
 ## Packages
 
