@@ -234,14 +234,13 @@ qnorm(.05, mean = -10, sd = 10)
 * Create a function `my_reverse` which takes as required input a vector `v` and returns the vector in reverse where the first entry is the last entry, etc. No function calls are allowed inside your function otherwise that would defeat the purpose of the exercise! (Yes, there is a base R function that does this called `rev`). Use `head` on `v` and `tail` on `my_reverse(v)` to verify it works.
 
 ```{r}
-my_reverse= function(v) {
-    n =length(v)
-    reversed_v =numeric(n)  # Initialize an empty numeric vector of the same length
-    for (i in 1:n) {
-        reversed_v[i]= v[n - i + 1]
-    }
-    return(reversed_v)
+my_reverse = function(vect_v){
+  reversed_v = c(1 : length(vect_v)) 
+  reversed_v[1 : length(vect_v)] = vect_v[length(vect_v) : 1] 
+  
+  reversed_v
 }
+
 my_reverse(v)
 
 head(v)
@@ -272,7 +271,7 @@ flip_matrix = function(matrix, dim_to_rev) {
 
     return(matrix)
 }
-
+#gpt helped me with a lot of this code, I added my special touches tho
 ```
 
 * Create a list named `my_list` with keys "A", "B", ... where the entries are arrays of size 1, 2 x 2, 3 x 3 x 3, etc. Fill the array with the numbers 1, 2, 3, etc. Make 8 entries according to this sequence.
@@ -285,7 +284,8 @@ my_list = list("A" = array(1,1),
                "E" = array(5,c(5,5,5,5,5)),
                "F" = array(6,c(6,6,6,6,6,6)),
                "G" = array(7,c(7,7,7,7,7,7,7)),
-               "H" = array(8,c(8,8,8,8,8,8,8,8)))
+               "H" = array(8,c(8,8,8,8,8,8,8,8))
+               )
 
                
 ```
