@@ -2,7 +2,7 @@
 title: "Lab 2"
 author: "Joshua Eisner"
 output: pdf_document
-date: "11:59PM February 20"
+date: "11:59PM February 8"
 ---
 
 # Basic Modeling
