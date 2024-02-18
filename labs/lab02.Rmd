@@ -89,7 +89,7 @@ my_matrix[,2] = runif(100, -10, 10)
 my_matrix[,3] = rpois(100, 6)
 my_matrix[,4] = rexp(100, 9)
 my_matrix[,5] = rbinom(20, 100, .12)
-my_matrix[,6] = sample(c(rep(1, 24), rep(0, 76)))
+my_matrix[,6] = sample(0:1, 100, replace = TRUE,)
 
 my_matrix
 ```
