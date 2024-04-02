@@ -70,7 +70,7 @@ simple_viz_obj = ggplot(Xy_simple, aes(x = first_feature, y = second_feature, co
 simple_viz_obj
 ```
 
-TO-DO: It creates a wedge where the middle 1 circle is kind of chasing the middle 0 circle. It's not a perfect reflection.
+TO-DO: Explain this picture.
 
 Now, let us run the algorithm and see what happens:
 
@@ -83,7 +83,7 @@ w_vec_simple_per
 
 Explain this output. What do the numbers mean? What is the intercept of this line and the slope? You will have to do some algebra.
 
-
+TO-DO
 
 
 ```{r}
