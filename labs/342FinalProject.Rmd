@@ -1,0 +1,226 @@
+---
+title: "Math 342w Final Project"
+author: "Joshua Eisner"
+date: "5/09/2024"
+---
+
+
+
+```{r}
+set.seed(342)
+#Courtesy of Tao
+
+#Set cache for seed
+knitr::opts_chunk$set(cache = T)
+#Memory allocation for Java ~10gb and Garbage Collection
+options(java.parameters = c("-XX:+UseConcMarkSweepGC", "-Xmx10000m"))
+#Packages to load
+pacman::p_load(
+  ggplot2,
+  tidyverse,
+  data.table,
+  R.utils,
+  magrittr,
+  dplyr,
+  testthat,
+  YARF,
+  lubridate,
+  missForest,
+  parallel,
+  doParallel,
+  caret,
+  glmnet,
+  mlr,
+  mlr3
+)
+#Set CPU cores for YARF
+num_of_cores = 8
+set_YARF_num_cores(num_of_cores)
+#Initialize rJava
+library(rJava)
+gc()
+.jinit()
+```
+
+```{r}
+# Data Preperation, Cleaning, and Imputation
+housing_data = read.csv("housing_data_2016_2017.csv", stringsAsFactors = FALSE)
+
+
+
+# Fix feature selection and clean data
+q_housing = housing_data %>%
+  select(
+    num_bedrooms, num_floors_in_building, kitchen_type, maintenance_cost, 
+    num_full_bathrooms, num_total_rooms, sq_footage, walk_score, dining_room_type, 
+    fuel_type, cats_allowed, dogs_allowed, approx_year_built, 
+    garage_exists, sale_price
+  ) %>%
+  mutate(
+    kitchen_type = factor(kitchen_type, ordered = FALSE),
+    dining_room_type = factor(tolower(dining_room_type), ordered = FALSE),
+    fuel_type = factor(tolower(fuel_type), ordered = FALSE),
+    maintenance_cost = as.numeric(maintenance_cost),
+    dogs_allowed = ifelse(substr(dogs_allowed, 1, 1) == "y", 1, 0),
+    cats_allowed = ifelse(substr(cats_allowed, 1, 1) == "y", 1, 0),
+    sale_price = as.numeric(gsub('[$,]', '', sale_price)),
+    garage_exists = ifelse(is.na(garage_exists), 0, 1)
+  )
+
+# Replace specific values in dining_room_type and fuel_type
+q_housing$dining_room_type[q_housing$dining_room_type %in% c("dining area")] = "other"
+q_housing$fuel_type[q_housing$fuel_type == "none"] = "other"
+
+# Identify missing values
+missingTable = q_housing %>%
+  is.na() %>%
+  as.data.frame() %>%
+  apply(2, as.numeric) %>%
+  as_tibble() %>%
+  setNames(paste0("is_missing_", names(q_housing))) %>%
+  select_if(~ sum(.) > 0)
+
+# Impute missing values
+imp_q_housing = missForest(q_housing, sampsize = rep(525, ncol(q_housing)))$ximp
+```
+
+```{r}
+# Load necessary libraries
+library(pacman)
+pacman::p_load(mlr3, mlr3learners, mlr3measures, dplyr, broom, knitr)
+
+# Linear Model
+task = TaskRegr$new(id = "housing", backend = imp_q_housing, target = "sale_price")
+
+# Define the regression algorithm (linear model)
+learner = lrn("regr.lm")
+
+# Define the 5-fold cross-validation
+resampling = rsmp("cv", folds = 5)
+
+# Perform the resampling (cross-validation)
+resample_result = resample(task, learner, resampling)
+
+# Calculate RMSE for each fold
+rmse_values = resample_result$score(msr("regr.rmse"))
+
+# Calculate and print the mean and standard deviation of RMSE
+mean_rmse = mean(rmse_values$regr.rmse)
+sd_rmse = sd(rmse_values$regr.rmse)
+cat("Mean RMSE:", mean_rmse, "\n")
+cat("Standard Deviation of RMSE:", sd_rmse, "\n")
+
+# Fit the linear model on the entire dataset
+learner$train(task)
+
+# Print the summary of the linear model
+model = learner$model
+summary(model)
+tidy_model = tidy(model)
+kable(tidy_model, format = "markdown")
+```
+
+```{r}
+#Regression Trees
+
+# Load necessary libraries
+library(pacman)
+pacman::p_load(dplyr, YARF, ggplot2)
+
+# Set Java parameters
+options(java.parameters = "-Xmx4000m")
+
+# Define proportion for test set
+test_prop = 0.1
+
+# Split the data into training and testing sets
+set.seed(7902)  # For reproducibility
+train_indices = sample(1:nrow(imp_q_housing), round((1 - test_prop) * nrow(imp_q_housing)))
+imp_q_train = imp_q_housing[train_indices, ]
+imp_q_test = imp_q_housing[-train_indices, ]
+
+# Prepare training data
+y_train = imp_q_train$sale_price
+X_train = imp_q_train %>% select(-sale_price)
+
+# Prepare testing data
+y_test = imp_q_test$sale_price
+X_test = imp_q_test %>% select(-sale_price)
+
+# Ensure both datasets have the same column names
+if (!all(colnames(X_train) == colnames(X_test))) {
+  stop("Training and test datasets have mismatched columns.")
+}
+
+# Train the regression tree model
+tree_mod = YARFCART(data.frame(X = X_train), y_train)
+
+# Print the model summary
+print(tree_mod)
+
+# Get tree metrics: number of nodes, leaves, and max depth
+tree_metrics = get_tree_num_nodes_leaves_max_depths(tree_mod)
+print(tree_metrics)
+
+# Illustrate the trees with specified parameters
+illustrate_trees(tree_mod, max_depth = 4, open_file = TRUE, length_in_px_per_half_split = 30)
+```
+
+```{r}
+# RANDOM FOREST
+
+# Load necessary libraries
+library(pacman)
+pacman::p_load(dplyr, ggplot2, YARF)
+
+# Set Java parameters
+options(java.parameters = "-Xmx4000m")
+
+# Prepare data
+y = imp_q_housing$sale_price
+X = imp_q_housing %>% select(-sale_price)
+
+# Train the random forest model on the entire dataset
+set.seed(7902)  # For reproducibility
+mod_rf = YARF(X, y, num_trees = 300)
+print(mod_rf)
+
+# Illustrate the trees
+illustrate_trees(mod_rf, max_depth = 4, open_file = TRUE, length_in_px_per_half_split = 30)
+
+# Train/test split
+test_prop = 0.1
+set.seed(123)  # For reproducibility
+train_indices = sample(1:nrow(imp_q_housing), round((1 - test_prop) * nrow(imp_q_housing)))
+imp_q_train = imp_q_housing[train_indices, ]
+imp_q_test = imp_q_housing[-train_indices, ]
+
+# Prepare training and testing data
+y_train = imp_q_train$sale_price
+X_train = imp_q_train %>% select(-sale_price)
+y_test = imp_q_test$sale_price
+X_test = imp_q_test %>% select(-sale_price)
+
+# Train the random forest model on the training set
+set.seed(7902)  # For reproducibility
+test_rf = YARF(X_train, y_train, num_trees = 300)
+print(test_rf)
+
+# Predict on the testing set
+y_hat_test = predict(test_rf, X_test)
+
+# Calculate RMSE
+test_rmse = sqrt(mean((y_test - y_hat_test)^2))
+cat("Test RMSE:", test_rmse, "\n")
+
+# Calculate R-squared
+test_rsq = 1 - sum((y_test - y_hat_test)^2) / sum((y_test - mean(y_train))^2)
+cat("Test R-squared:", test_rsq, "\n")
+
+# Plot predicted vs actual values
+ggplot(data = data.frame(y_test, y_hat_test), aes(x = y_hat_test, y = y_test)) +
+  geom_point(color = "blue") +
+  geom_abline(color = "red") +
+  labs(x = "Predicted Values", y = "Actual Values", title = "Predicted vs Actual Values")
+
+```
